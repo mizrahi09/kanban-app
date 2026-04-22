@@ -9,7 +9,8 @@ export default function LoginPage() {
     try {
       setError(null)
       await login()
-    } catch {
+    } catch (err) {
+      console.error('Login error:', err?.code, err?.message)
       setError('Sign in failed. Please try again.')
     }
   }
