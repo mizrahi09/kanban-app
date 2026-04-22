@@ -2,12 +2,22 @@ import { useState } from 'react'
 
 export default function NewBoardModal({ onCreate, onClose }) {
   const [name, setName] = useState('')
+  const [error, setError] = useState(null)
+  const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!name.trim()) return
-    await onCreate(name.trim())
-    onClose()
+    setError(null)
+    setLoading(true)
+    try {
+      await onCreate(name.trim())
+      onClose()
+    } catch {
+      setError('Failed to create board. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -23,14 +33,15 @@ export default function NewBoardModal({ onCreate, onClose }) {
             onChange={e => setName(e.target.value)}
             className="border border-indigo-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
           />
+          {error && <p className="text-red-500 text-xs">{error}</p>}
           <div className="flex gap-3 justify-end">
             <button type="button" onClick={onClose}
               className="px-4 py-2 text-sm text-slate-400 hover:text-slate-600">
               Cancel
             </button>
-            <button type="submit"
-              className="bg-indigo-600 text-white px-5 py-2 rounded-xl text-sm font-semibold hover:bg-indigo-700">
-              Create
+            <button type="submit" disabled={loading}
+              className="bg-indigo-600 text-white px-5 py-2 rounded-xl text-sm font-semibold hover:bg-indigo-700 disabled:opacity-60">
+              {loading ? 'Creating…' : 'Create'}
             </button>
           </div>
         </form>
