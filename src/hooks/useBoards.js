@@ -9,6 +9,7 @@ import { useAuth } from '../context/AuthContext'
 export function useBoards() {
   const { user } = useAuth()
   const [boards, setBoards] = useState([])
+  const [ready, setReady] = useState(false)
 
   useEffect(() => {
     if (!user) return
@@ -30,6 +31,7 @@ export function useBoards() {
         const shared = prev.filter(b => b._type === 'shared')
         return [...owned, ...shared]
       })
+      setReady(true)
     })
     const sharedUnsub = onSnapshot(sharedQ, snap => {
       const shared = snap.docs
@@ -60,5 +62,5 @@ export function useBoards() {
   const deleteBoard = (boardId) =>
     deleteDoc(doc(db, 'boards', boardId))
 
-  return { boards, createBoard, updateBoard, deleteBoard }
+  return { boards, ready, createBoard, updateBoard, deleteBoard }
 }
