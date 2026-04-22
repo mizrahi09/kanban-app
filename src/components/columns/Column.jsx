@@ -4,103 +4,63 @@ import { CSS } from '@dnd-kit/utilities'
 import TaskCard from '../tasks/TaskCard'
 
 function SortableTaskCard({ task, onEdit, onDelete }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-  } = useSortable({ id: task.id })
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  }
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: task.id })
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <TaskCard
-        task={task}
-        onEdit={() => onEdit(task)}
-        onDelete={() => onDelete(task.id)}
-      />
+    <div
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
+      {...attributes}
+      {...listeners}
+    >
+      <TaskCard task={task} onEdit={() => onEdit(task)} onDelete={() => onDelete(task.id)} />
     </div>
   )
 }
 
 function DroppableTaskList({ columnId, children }) {
   const { setNodeRef } = useDroppable({ id: columnId })
-
   return (
-    <div ref={setNodeRef} className="flex flex-col gap-2 min-h-[4rem]">
+    <div ref={setNodeRef} className="flex flex-col gap-1.5 min-h-[3rem]">
       {children}
     </div>
   )
 }
 
-export default function Column({
-  column,
-  tasks,
-  onAddTask,
-  onEditTask,
-  onDeleteTask,
-  onReorderTasks,
-  onMoveTask,
-}) {
+export default function Column({ column, tasks, onAddTask, onEditTask, onDeleteTask, onReorderTasks, onMoveTask }) {
   const taskIds = tasks.map(t => t.id)
 
-  function handleDragEnd(event) {
-    const { active, over } = event
-
+  function handleDragEnd({ active, over }) {
     if (!over) return
-
     const activeId = active.id
     const overId = over.id
-
-    // Determine if the drop target is within this column
     const overIsTask = tasks.some(t => t.id === overId)
     const overIsColumn = overId === column.id
 
     if (overIsTask) {
-      // Dropped onto a task — could be same column or different column
       const activeIndex = tasks.findIndex(t => t.id === activeId)
-
       if (activeIndex !== -1) {
-        // Active task is in this column — reorder within column
         const overIndex = tasks.findIndex(t => t.id === overId)
-        if (activeIndex !== overIndex) {
-          const reordered = arrayMove(tasks, activeIndex, overIndex)
-          onReorderTasks(reordered, column.id)
-        }
+        if (activeIndex !== overIndex) onReorderTasks(arrayMove(tasks, activeIndex, overIndex), column.id)
       } else {
-        // Active task is from another column — move it here
         onMoveTask(activeId, overId)
       }
     } else if (overIsColumn) {
-      // Dropped onto the column area (empty column or background)
-      const activeIndex = tasks.findIndex(t => t.id === activeId)
-
-      if (activeIndex !== -1) {
-        // Task already in this column, no-op (dropped in place)
-        return
-      } else {
-        // Task from another column dropped here
-        onMoveTask(activeId, column.id)
-      }
+      if (tasks.findIndex(t => t.id === activeId) === -1) onMoveTask(activeId, column.id)
     }
   }
 
   return (
-    <div className="flex flex-col w-72 shrink-0">
-      {/* Column header */}
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-sm font-semibold text-slate-700">{column.name}</span>
-        <span className="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">
-          {tasks.length}
-        </span>
+    <div className="flex flex-col w-64 shrink-0">
+      {/* Header */}
+      <div className="flex items-center gap-2 mb-3 px-1">
+        <span className="text-sm font-semibold text-gray-700">{column.name}</span>
+        <span className="text-xs text-gray-400 font-medium">{tasks.length}</span>
       </div>
 
-      {/* Drag and drop context */}
+      {/* Divider line under header */}
+      <div className="h-0.5 bg-gray-200 rounded mb-3" />
+
       <DndContext onDragEnd={handleDragEnd}>
         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
           <DroppableTaskList columnId={column.id}>
@@ -116,12 +76,13 @@ export default function Column({
         </SortableContext>
       </DndContext>
 
-      {/* Add task button */}
+      {/* Add task */}
       <button
-        className="mt-2 w-full text-left text-xs text-slate-400 hover:text-indigo-500 py-1 px-2 rounded-lg hover:bg-indigo-50 transition-colors"
+        className="mt-2 w-full text-left text-sm text-gray-400 hover:text-gray-600 py-1.5 px-1 flex items-center gap-2 rounded hover:bg-gray-50 transition-colors"
         onClick={() => onAddTask(column.id)}
       >
-        + Add task
+        <span className="text-base leading-none">+</span>
+        <span>Add task</span>
       </button>
     </div>
   )
