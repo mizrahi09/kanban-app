@@ -5,7 +5,6 @@ import TaskCard from '../tasks/TaskCard'
 
 function SortableTaskCard({ task, onEdit, onDelete }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: task.id })
-
   return (
     <div
       ref={setNodeRef}
@@ -21,7 +20,7 @@ function SortableTaskCard({ task, onEdit, onDelete }) {
 function DroppableTaskList({ columnId, children }) {
   const { setNodeRef } = useDroppable({ id: columnId })
   return (
-    <div ref={setNodeRef} className="flex flex-col gap-1.5 min-h-[3rem]">
+    <div ref={setNodeRef} className="flex flex-col gap-2 min-h-[3rem]">
       {children}
     </div>
   )
@@ -35,7 +34,6 @@ export default function Column({ column, tasks, onAddTask, onEditTask, onDeleteT
     const activeId = active.id
     const overId = over.id
     const overIsTask = tasks.some(t => t.id === overId)
-    const overIsColumn = overId === column.id
 
     if (overIsTask) {
       const activeIndex = tasks.findIndex(t => t.id === activeId)
@@ -45,22 +43,20 @@ export default function Column({ column, tasks, onAddTask, onEditTask, onDeleteT
       } else {
         onMoveTask(activeId, overId)
       }
-    } else if (overIsColumn) {
+    } else if (overId === column.id) {
       if (tasks.findIndex(t => t.id === activeId) === -1) onMoveTask(activeId, column.id)
     }
   }
 
   return (
-    <div className="flex flex-col w-64 shrink-0">
+    <div className="flex flex-col w-72 shrink-0 bg-gray-100/80 rounded-2xl p-3">
       {/* Header */}
-      <div className="flex items-center gap-2 mb-3 px-1">
+      <div className="flex items-center gap-2 px-1 mb-3">
         <span className="text-sm font-semibold text-gray-700">{column.name}</span>
         <span className="text-xs text-gray-400 font-medium">{tasks.length}</span>
       </div>
 
-      {/* Divider line under header */}
-      <div className="h-0.5 bg-gray-200 rounded mb-3" />
-
+      {/* Tasks */}
       <DndContext onDragEnd={handleDragEnd}>
         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
           <DroppableTaskList columnId={column.id}>
@@ -78,7 +74,7 @@ export default function Column({ column, tasks, onAddTask, onEditTask, onDeleteT
 
       {/* Add task */}
       <button
-        className="mt-2 w-full text-left text-sm text-gray-400 hover:text-gray-600 py-1.5 px-1 flex items-center gap-2 rounded hover:bg-gray-50 transition-colors"
+        className="mt-2 flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 px-2 py-1.5 rounded-lg hover:bg-gray-200 transition-colors w-full"
         onClick={() => onAddTask(column.id)}
       >
         <span className="text-base leading-none">+</span>

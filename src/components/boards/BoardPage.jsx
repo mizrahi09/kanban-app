@@ -8,7 +8,6 @@ import { sortTasks, groupTasks } from '../../utils/sortAndGroup'
 import Column from '../columns/Column'
 import TaskCard from '../tasks/TaskCard'
 import TaskModal from '../tasks/TaskModal'
-import BoardToolbar from '../toolbar/BoardToolbar'
 import BoardSettings from './BoardSettings'
 
 export default function BoardPage() {
@@ -17,15 +16,10 @@ export default function BoardPage() {
   const { columns, createColumn, updateColumn, deleteColumn, reorderColumns } = useColumns(boardId)
   const { tasks, createTask, updateTask, deleteTask, moveTask, reorderTasks } = useTasks(boardId)
 
-  // Toolbar state
-  const [groupBy, setGroupBy] = useState('')
   const [sortBy, setSortBy] = useState('')
   const [filterPriority, setFilterPriority] = useState('')
-  const [filterContentType, setFilterContentType] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [settingsOpen, setSettingsOpen] = useState(false)
-
-  // Task modal state
   const [taskModalOpen, setTaskModalOpen] = useState(false)
   const [editingTask, setEditingTask] = useState(null)
   const [newTaskColumnId, setNewTaskColumnId] = useState(null)
@@ -39,106 +33,119 @@ export default function BoardPage() {
   })
 
   if (!board) {
-    return (
-      <div className="flex-1 flex items-center justify-center text-slate-400">
-        Loading board…
-      </div>
-    )
+    return <div className="flex-1 flex items-center justify-center text-gray-400">Loading board…</div>
   }
 
-  // Task modal save handler
   const handleSaveTask = async (taskData) => {
     if (editingTask) {
       await updateTask(editingTask.id, taskData)
     } else {
-      const columnId = taskData.columnId || newTaskColumnId
-      await createTask(columnId, taskData)
+      await createTask(taskData.columnId || newTaskColumnId, taskData)
     }
     setTaskModalOpen(false)
   }
 
-  // Filter tasks
-  let filteredTasks = tasks
-
-  if (filterPriority) {
-    filteredTasks = filteredTasks.filter(t => t.priority === filterPriority)
+  const openNewTask = (columnId) => {
+    setEditingTask(null)
+    setNewTaskColumnId(columnId)
+    setTaskModalOpen(true)
   }
 
-  if (filterContentType) {
-    filteredTasks = filteredTasks.filter(t => t.contentType === filterContentType)
-  }
-
+  let filtered = tasks
+  if (filterPriority) filtered = filtered.filter(t => t.priority === filterPriority)
   if (searchQuery) {
     const q = searchQuery.toLowerCase()
-    filteredTasks = filteredTasks.filter(
-      t =>
-        (t.title || '').toLowerCase().includes(q) ||
-        (t.description || '').toLowerCase().includes(q)
+    filtered = filtered.filter(t =>
+      (t.title || '').toLowerCase().includes(q) ||
+      (t.description || '').toLowerCase().includes(q)
     )
   }
-
-  // Sort tasks
-  const sortedFilteredTasks = sortTasks(filteredTasks, sortBy)
+  const sorted = sortTasks(filtered, sortBy)
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
-      <BoardToolbar
-        groupBy={groupBy}
-        sortBy={sortBy}
-        filterPriority={filterPriority}
-        filterContentType={filterContentType}
-        searchQuery={searchQuery}
-        onGroupByChange={setGroupBy}
-        onSortByChange={setSortBy}
-        onFilterPriorityChange={setFilterPriority}
-        onFilterContentTypeChange={setFilterContentType}
-        onSearchQueryChange={setSearchQuery}
-        onOpenSettings={() => setSettingsOpen(true)}
-      />
+      {/* Board header */}
+      <div className="flex items-center justify-between px-6 py-3 border-b border-gray-100">
+        <h1 className="text-xl font-bold text-gray-800">{board.name}</h1>
+        <div className="flex items-center gap-2">
+          {/* Search */}
+          <input
+            type="text"
+            placeholder="Search tasks…"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-300 w-44"
+          />
+          {/* Filter priority */}
+          <select
+            value={filterPriority}
+            onChange={e => setFilterPriority(e.target.value)}
+            className="text-sm border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none text-gray-600"
+          >
+            <option value="">All priorities</option>
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
+          </select>
+          {/* Sort */}
+          <select
+            value={sortBy}
+            onChange={e => setSortBy(e.target.value)}
+            className="text-sm border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none text-gray-600"
+          >
+            <option value="">Sort</option>
+            <option value="priority">Priority</option>
+            <option value="dueDate">Due Date</option>
+            <option value="title">Title</option>
+          </select>
+          {/* Settings */}
+          <button
+            onClick={() => setSettingsOpen(true)}
+            className="text-sm text-gray-500 hover:text-indigo-600 border border-gray-200 rounded-lg px-3 py-1.5 hover:border-indigo-300 transition-colors flex items-center gap-1"
+          >
+            ⚙ Settings
+          </button>
+        </div>
+      </div>
 
-      {groupBy ? (
-        // Grouped layout
-        <div className="overflow-y-auto px-4 pb-4 flex-1">
-          {groupTasks(sortedFilteredTasks, columns, groupBy).map(group => (
-            <div key={group.key} className="mb-6">
-              <h3 className="text-sm font-semibold text-slate-500 mb-3">{group.label}</h3>
-              <div className="flex flex-col gap-2">
-                {group.tasks.map(task => (
-                  <TaskCard
-                    key={task.id}
-                    task={task}
-                    onEdit={() => { setEditingTask(task); setTaskModalOpen(true) }}
-                    onDelete={() => deleteTask(task.id)}
-                  />
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        // Normal column layout
-        <div className="flex gap-4 overflow-x-auto px-4 pb-4 flex-1 items-start">
-          {columns.map(col => (
-            <Column
-              key={col.id}
-              column={col}
-              tasks={sortedFilteredTasks.filter(t => t.columnId === col.id)}
-              onAddTask={(columnId) => {
-                setEditingTask(null)
-                setNewTaskColumnId(columnId)
-                setTaskModalOpen(true)
-              }}
-              onEditTask={(task) => {
-                setEditingTask(task)
-                setTaskModalOpen(true)
-              }}
-              onDeleteTask={deleteTask}
-              onReorderTasks={reorderTasks}
-              onMoveTask={moveTask}
-            />
-          ))}
-        </div>
-      )}
+      {/* "+ Add task" bar */}
+      <div className="px-6 py-2 border-b border-gray-100">
+        <button
+          onClick={() => openNewTask(columns[0]?.id)}
+          className="flex items-center gap-2 text-sm text-gray-500 hover:text-indigo-600 border border-gray-200 rounded-lg px-3 py-1.5 hover:border-indigo-300 transition-colors"
+        >
+          <span className="text-base leading-none">+</span>
+          <span>Add task</span>
+        </button>
+      </div>
+
+      {/* Columns */}
+      <div className="flex gap-4 overflow-x-auto px-6 py-5 flex-1 items-start">
+        {columns.map(col => (
+          <Column
+            key={col.id}
+            column={col}
+            tasks={sorted.filter(t => t.columnId === col.id)}
+            onAddTask={openNewTask}
+            onEditTask={(task) => { setEditingTask(task); setTaskModalOpen(true) }}
+            onDeleteTask={deleteTask}
+            onReorderTasks={reorderTasks}
+            onMoveTask={moveTask}
+          />
+        ))}
+
+        {/* Add section button */}
+        <button
+          onClick={() => {
+            const name = prompt('Column name:')
+            if (name?.trim()) createColumn(name.trim())
+          }}
+          className="flex items-center gap-2 text-sm text-gray-400 hover:text-gray-600 px-4 py-2 rounded-xl border-2 border-dashed border-gray-200 hover:border-gray-300 transition-colors shrink-0 mt-0.5"
+        >
+          <span>+</span>
+          <span>Add section</span>
+        </button>
+      </div>
 
       {taskModalOpen && (
         <TaskModal
