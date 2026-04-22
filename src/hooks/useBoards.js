@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import {
   collection, addDoc, onSnapshot, query, where,
-  orderBy, doc, updateDoc, deleteDoc, serverTimestamp,
+  doc, updateDoc, deleteDoc, serverTimestamp,
 } from 'firebase/firestore'
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
@@ -16,32 +16,35 @@ export function useBoards() {
     // Listen to boards owned by this user AND shared boards
     const ownedQ = query(
       collection(db, 'boards'),
-      where('ownerId', '==', user.uid),
-      orderBy('createdAt', 'desc')
+      where('ownerId', '==', user.uid)
     )
     const sharedQ = query(
       collection(db, 'boards'),
-      where('isShared', '==', true),
-      orderBy('createdAt', 'desc')
+      where('isShared', '==', true)
+    )
+
+    const sort = (list) => [...list].sort((a, b) =>
+      (b.createdAt?.toMillis?.() ?? 0) - (a.createdAt?.toMillis?.() ?? 0)
     )
 
     const ownedUnsub = onSnapshot(ownedQ, snap => {
       const owned = snap.docs.map(d => ({ id: d.id, ...d.data(), _type: 'owned' }))
       setBoards(prev => {
         const shared = prev.filter(b => b._type === 'shared')
-        return [...owned, ...shared]
+        return sort([...owned, ...shared])
       })
       setReady(true)
-    })
+    }, err => console.error('boards snapshot error:', err))
+
     const sharedUnsub = onSnapshot(sharedQ, snap => {
       const shared = snap.docs
         .filter(d => d.data().ownerId !== user.uid)
         .map(d => ({ id: d.id, ...d.data(), _type: 'shared' }))
       setBoards(prev => {
         const owned = prev.filter(b => b._type === 'owned')
-        return [...owned, ...shared]
+        return sort([...owned, ...shared])
       })
-    })
+    }, err => console.error('shared boards snapshot error:', err))
 
     return () => { ownedUnsub(); sharedUnsub() }
   }, [user])
