@@ -9,10 +9,8 @@ export default function LoginPage() {
     try {
       setError(null)
       await login()
-    } catch (err) {
-      if (err.code !== 'auth/popup-closed-by-user') {
-        setError('Sign in failed. Please try again.')
-      }
+    } catch {
+      setError('Sign in failed. Please try again.')
     }
   }
 
