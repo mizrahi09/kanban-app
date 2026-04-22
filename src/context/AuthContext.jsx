@@ -9,8 +9,13 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(undefined)
 
   useEffect(() => {
-    getRedirectResult(auth).catch(() => {})
-    return onAuthStateChanged(auth, setUser)
+    getRedirectResult(auth)
+      .then(result => console.log('redirect result:', result?.user?.email ?? 'no user'))
+      .catch(err => console.error('redirect error:', err?.code, err?.message))
+    return onAuthStateChanged(auth, user => {
+      console.log('auth state changed:', user?.email ?? 'null')
+      setUser(user)
+    })
   }, [])
 
   const login = () => signInWithRedirect(auth, googleProvider)
