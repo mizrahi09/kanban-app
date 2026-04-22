@@ -10,8 +10,10 @@ export default function LoginPage() {
       setError(null)
       await login()
     } catch (err) {
-      console.error('Login error:', err?.code, err?.message)
-      setError('Sign in failed. Please try again.')
+      if (err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/cancelled-popup-request') {
+        console.error('Login error:', err?.code, err?.message)
+        setError('Sign in failed. Please try again.')
+      }
     }
   }
 
