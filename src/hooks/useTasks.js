@@ -44,15 +44,25 @@ export function useTasks(boardId) {
   const deleteTask = (taskId) =>
     deleteDoc(doc(db, 'boards', boardId, 'tasks', taskId))
 
-  // Called when a task is dropped into a new column or new position
+  // Simple move to a specific position (e.g., dropping on empty column)
   const moveTask = async (taskId, newColumnId, newOrder) => {
-    const batch = writeBatch(db)
-    batch.update(doc(db, 'boards', boardId, 'tasks', taskId), {
+    return updateDoc(doc(db, 'boards', boardId, 'tasks', taskId), {
       columnId: newColumnId,
       order: newOrder,
+    })
+  }
+
+  // Batch reorder — updates columnId + order for all tasks in one write
+  const reorderTasks = async (reordered, newColumnId) => {
+    const batch = writeBatch(db)
+    reordered.forEach((t, i) => {
+      batch.update(doc(db, 'boards', boardId, 'tasks', t.id), {
+        columnId: newColumnId,
+        order: i,
+      })
     })
     return batch.commit()
   }
 
-  return { tasks, createTask, updateTask, deleteTask, moveTask }
+  return { tasks, createTask, updateTask, deleteTask, moveTask, reorderTasks }
 }

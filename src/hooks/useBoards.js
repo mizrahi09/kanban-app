@@ -45,6 +45,7 @@ export function useBoards() {
   }, [user])
 
   const createBoard = async (name) => {
+    if (!user) throw new Error('Not authenticated')
     return addDoc(collection(db, 'boards'), {
       name,
       ownerId: user.uid,
