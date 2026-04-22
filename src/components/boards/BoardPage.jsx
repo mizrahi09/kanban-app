@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 import { useBoards } from '../../hooks/useBoards'
 import { useColumns } from '../../hooks/useColumns'
 import { useTasks } from '../../hooks/useTasks'
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts'
 import { sortTasks, groupTasks } from '../../utils/sortAndGroup'
 import Column from '../columns/Column'
 import TaskCard from '../tasks/TaskCard'
@@ -30,6 +31,12 @@ export default function BoardPage() {
   const [newTaskColumnId, setNewTaskColumnId] = useState(null)
 
   const board = boards.find(b => b.id === boardId)
+
+  useKeyboardShortcuts({
+    n: () => { if (columns.length > 0) { setEditingTask(null); setNewTaskColumnId(columns[0].id); setTaskModalOpen(true) } },
+    s: () => setSettingsOpen(true),
+    Escape: () => { setTaskModalOpen(false); setSettingsOpen(false) },
+  })
 
   if (!board) {
     return (
