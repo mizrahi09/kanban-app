@@ -11,7 +11,7 @@ const PRIORITY_BADGE = {
   Low:    'bg-yellow-100 text-yellow-700',
 }
 
-function AutoResizeTextarea({ className, value, onChange, onBlur, placeholder, minRows = 1 }) {
+function AutoResizeTextarea({ className, value, onChange, onBlur, onPaste, placeholder, minRows = 1 }) {
   const ref = useRef(null)
   useEffect(() => {
     if (ref.current) {
@@ -26,6 +26,7 @@ function AutoResizeTextarea({ className, value, onChange, onBlur, placeholder, m
       value={value}
       onChange={onChange}
       onBlur={onBlur}
+      onPaste={onPaste}
       placeholder={placeholder}
       rows={minRows}
       style={{ overflow: 'hidden' }}
@@ -264,6 +265,7 @@ function TaskDetail({ task, columns, boardId, onUpdate, onDelete, onClose }) {
   const [subtaskInput, setSubtaskInput] = useState('')
   const [showSubtaskInput, setShowSubtaskInput] = useState(false)
   const [activeTab, setActiveTab]   = useState('comments')
+  const [pasteUploading, setPasteUploading] = useState(false)
 
   useEffect(() => {
     setTitle(task.title ?? '')
@@ -271,6 +273,28 @@ function TaskDetail({ task, columns, boardId, onUpdate, onDelete, onClose }) {
   }, [task.id])
 
   const save = (field, value) => onUpdate(task.id, { [field]: value })
+
+  const handleDescriptionPaste = async (e) => {
+    const items = Array.from(e.clipboardData?.items ?? [])
+    const imageItem = items.find(i => i.type.startsWith('image/'))
+    if (!imageItem) return
+    e.preventDefault()
+    const file = imageItem.getAsFile()
+    if (!file) return
+    setPasteUploading(true)
+    try {
+      const storageRef = ref(storage, `tasks/${task.id}/${Date.now()}_paste.${file.type.split('/')[1] || 'png'}`)
+      await uploadBytes(storageRef, file)
+      const url = await getDownloadURL(storageRef)
+      onUpdate(task.id, {
+        attachments: [...(task.attachments ?? []), { url, name: 'Pasted image', type: file.type }],
+      })
+    } catch (err) {
+      console.error('Paste upload error:', err)
+    } finally {
+      setPasteUploading(false)
+    }
+  }
 
   const handleCommentSubmit = async () => {
     if (!commentText.trim()) return
@@ -353,13 +377,17 @@ function TaskDetail({ task, columns, boardId, onUpdate, onDelete, onClose }) {
 
         {/* Description */}
         <div className="px-6 py-4 border-t border-gray-100">
-          <p className="text-sm font-semibold text-gray-700 mb-2">Description</p>
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm font-semibold text-gray-700">Description</p>
+            {pasteUploading && <span className="text-xs text-indigo-500 animate-pulse">Uploading image…</span>}
+          </div>
           <AutoResizeTextarea
             className="w-full text-sm text-gray-700 outline-none resize-none placeholder-gray-300 bg-transparent"
             value={description}
             onChange={e => setDescription(e.target.value)}
             onBlur={() => description !== (task.description ?? '') && save('description', description)}
-            placeholder="What is this task about?"
+            onPaste={handleDescriptionPaste}
+            placeholder="What is this task about? Paste an image to add it as an attachment."
             minRows={3}
           />
         </div>

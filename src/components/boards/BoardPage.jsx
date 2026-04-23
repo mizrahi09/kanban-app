@@ -25,6 +25,8 @@ export default function BoardPage() {
   const [newTaskColumnId, setNewTaskColumnId] = useState(null)
 
   const board = boards.find(b => b.id === boardId)
+  // Always use live Firestore data for the panel when available
+  const liveEditingTask = editingTask ? (tasks.find(t => t.id === editingTask.id) ?? editingTask) : null
 
   useKeyboardShortcuts({
     n: () => { if (columns.length > 0) { setEditingTask(null); setNewTaskColumnId(columns[0].id); setTaskModalOpen(true) } },
@@ -37,8 +39,10 @@ export default function BoardPage() {
   }
 
   const handleSaveTask = async (taskData) => {
-    await createTask(taskData.columnId || newTaskColumnId, taskData)
-    setTaskModalOpen(false)
+    const colId = taskData.columnId || newTaskColumnId
+    const docRef = await createTask(colId, taskData)
+    // Keep panel open in edit mode so user can add subtasks/comments/attachments
+    setEditingTask({ id: docRef.id, ...taskData, columnId: colId, completed: false, attachments: [] })
   }
 
   const handleDeleteTask = async (taskId) => {
@@ -151,7 +155,7 @@ export default function BoardPage() {
 
       {taskModalOpen && (
         <TaskDetailPanel
-          task={editingTask}
+          task={liveEditingTask}
           columnId={newTaskColumnId}
           columns={columns}
           boardId={boardId}
