@@ -114,7 +114,7 @@ function AttachmentSection({ task, onUpdate }) {
             <div key={a.url} className="group relative">
               {a.type?.startsWith('image/') ? (
                 <a href={a.url} target="_blank" rel="noreferrer">
-                  <img src={a.url} alt={a.name} className="w-20 h-20 object-cover rounded-lg border border-gray-200" />
+                  <img src={a.url} alt={a.name} className="w-12 h-12 object-cover rounded-md border border-gray-200" />
                 </a>
               ) : (
                 <a href={a.url} target="_blank" rel="noreferrer"
