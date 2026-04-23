@@ -79,7 +79,7 @@ function ContextMenu({ x, y, onClose, items }) {
   )
 }
 
-export default function TaskCard({ task, onEdit, onDelete, onDuplicate, boardId, dragListeners }) {
+export default function TaskCard({ task, onEdit, onDelete, onDuplicate, boardId }) {
   const [menu, setMenu] = useState(null)
   const { title, priority, dueDate, completed } = task
 
@@ -104,7 +104,7 @@ export default function TaskCard({ task, onEdit, onDelete, onDuplicate, boardId,
   return (
     <>
       <div
-        className="group relative bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer p-3"
+        className="group relative bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing p-3"
         onClick={onEdit}
         onContextMenu={handleContextMenu}
       >
@@ -119,22 +119,8 @@ export default function TaskCard({ task, onEdit, onDelete, onDuplicate, boardId,
           </svg>
         </button>
 
-        {/* Drag handle — only this element initiates drag */}
-        <div
-          {...dragListeners}
-          onClick={e => e.stopPropagation()}
-          className="absolute left-1.5 top-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-30 hover:!opacity-60 p-0.5 rounded touch-none"
-        >
-          <svg className="w-3 h-4 text-gray-400" fill="currentColor" viewBox="0 0 8 16">
-            <circle cx="2" cy="2"  r="1.3"/><circle cx="6" cy="2"  r="1.3"/>
-            <circle cx="2" cy="6"  r="1.3"/><circle cx="6" cy="6"  r="1.3"/>
-            <circle cx="2" cy="10" r="1.3"/><circle cx="6" cy="10" r="1.3"/>
-            <circle cx="2" cy="14" r="1.3"/><circle cx="6" cy="14" r="1.3"/>
-          </svg>
-        </div>
-
         {/* Title row */}
-        <div className="flex items-start gap-2.5 pr-4 pl-5">
+        <div className="flex items-start gap-2.5 pr-4">
           {completed ? (
             <div className="mt-0.5 w-4 h-4 flex-shrink-0 rounded-full bg-green-500 flex items-center justify-center">
               <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 12 12" stroke="currentColor" strokeWidth={2.5}>
@@ -151,7 +137,7 @@ export default function TaskCard({ task, onEdit, onDelete, onDuplicate, boardId,
 
         {/* Priority + due date */}
         {(priority || dueDate) && (
-          <div className="flex items-center gap-1.5 mt-2.5 ml-10">
+          <div className="flex items-center gap-1.5 mt-2.5 ml-6">
             {priority && (
               <span className={`text-xs font-medium px-2 py-0.5 rounded ${PRIORITY_BADGE[priority] ?? 'bg-gray-100 text-gray-600'}`}>
                 {priority}
@@ -166,7 +152,7 @@ export default function TaskCard({ task, onEdit, onDelete, onDuplicate, boardId,
         )}
 
         {/* Assignee placeholder */}
-        <div className="mt-2.5 ml-10">
+        <div className="mt-2.5 ml-6">
           <div className="w-6 h-6 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center">
             <svg className="w-3 h-3 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />

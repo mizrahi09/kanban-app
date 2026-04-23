@@ -20,7 +20,7 @@ export default function BoardPage() {
   const autoOpenedRef = useRef(false)
 
   // Require 5px movement before activating drag so clicks still fire
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }))
 
   const [sortBy, setSortBy] = useState('')
   const [filterPriority, setFilterPriority] = useState('')

@@ -10,6 +10,7 @@ function SortableTaskCard({ task, boardId, onEdit, onDelete, onDuplicate }) {
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 }}
       {...attributes}
+      {...listeners}
     >
       <TaskCard
         task={task}
@@ -17,7 +18,6 @@ function SortableTaskCard({ task, boardId, onEdit, onDelete, onDuplicate }) {
         onEdit={() => onEdit(task)}
         onDelete={() => onDelete(task.id)}
         onDuplicate={() => onDuplicate(task)}
-        dragListeners={listeners}
       />
     </div>
   )
