@@ -83,7 +83,7 @@ export default function TaskCard({ task, onEdit, onDelete, onDuplicate, boardId 
   const [menu, setMenu] = useState(null)
   const { title, priority, dueDate, completed } = task
 
-  const taskUrl = `${window.location.origin}/boards/${boardId}?task=${task.id}`
+  const taskUrl = `${window.location.origin}/board/${boardId}?task=${task.id}`
 
   const handleContextMenu = (e) => {
     e.preventDefault()
