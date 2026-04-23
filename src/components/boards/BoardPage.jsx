@@ -30,6 +30,8 @@ export default function BoardPage() {
   const [taskModalOpen, setTaskModalOpen] = useState(false)
   const [editingTask, setEditingTask] = useState(null)
   const [draggingTask, setDraggingTask] = useState(null)
+  const [editingBoardName, setEditingBoardName] = useState(false)
+  const [boardNameInput, setBoardNameInput] = useState('')
 
   // Auto-open task panel from ?task= URL param (e.g. "Open in new tab")
   useEffect(() => {
@@ -50,7 +52,7 @@ export default function BoardPage() {
   const liveEditingTask = editingTask ? (tasks.find(t => t.id === editingTask.id) ?? editingTask) : null
 
   useKeyboardShortcuts({
-    n: () => { if (columns.length > 0) { setEditingTask(null); setNewTaskColumnId(columns[0].id); setTaskModalOpen(true) } },
+    n: () => { if (columns.length > 0) openNewTask(columns[0].id) },
     s: () => setSettingsOpen(true),
     Escape: () => { setTaskModalOpen(false); setSettingsOpen(false) },
   })
@@ -133,7 +135,33 @@ export default function BoardPage() {
     <div className="flex flex-col flex-1 min-h-0">
       {/* Board header */}
       <div className="flex items-center justify-between px-6 py-3 border-b border-gray-100">
-        <h1 className="text-xl font-bold text-gray-800">{board.name}</h1>
+        {editingBoardName ? (
+          <input
+            autoFocus
+            value={boardNameInput}
+            onChange={e => setBoardNameInput(e.target.value)}
+            onBlur={() => {
+              if (boardNameInput.trim()) updateBoard(boardId, { name: boardNameInput.trim() })
+              setEditingBoardName(false)
+            }}
+            onKeyDown={e => {
+              if (e.key === 'Enter') {
+                if (boardNameInput.trim()) updateBoard(boardId, { name: boardNameInput.trim() })
+                setEditingBoardName(false)
+              }
+              if (e.key === 'Escape') setEditingBoardName(false)
+            }}
+            className="text-xl font-bold text-gray-900 outline-none border-b-2 border-indigo-400 bg-transparent w-64"
+          />
+        ) : (
+          <h1
+            className="text-xl font-bold text-gray-800 cursor-default select-none"
+            onDoubleClick={() => { setBoardNameInput(board.name); setEditingBoardName(true) }}
+            title="Double-click to rename"
+          >
+            {board.name}
+          </h1>
+        )}
         <div className="flex items-center gap-2">
           {/* Search */}
           <input
