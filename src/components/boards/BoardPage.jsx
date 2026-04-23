@@ -7,7 +7,7 @@ import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts'
 import { sortTasks, groupTasks } from '../../utils/sortAndGroup'
 import Column from '../columns/Column'
 import TaskCard from '../tasks/TaskCard'
-import TaskModal from '../tasks/TaskModal'
+import TaskDetailPanel from '../tasks/TaskDetailPanel'
 import BoardSettings from './BoardSettings'
 
 export default function BoardPage() {
@@ -37,12 +37,14 @@ export default function BoardPage() {
   }
 
   const handleSaveTask = async (taskData) => {
-    if (editingTask) {
-      await updateTask(editingTask.id, taskData)
-    } else {
-      await createTask(taskData.columnId || newTaskColumnId, taskData)
-    }
+    await createTask(taskData.columnId || newTaskColumnId, taskData)
     setTaskModalOpen(false)
+  }
+
+  const handleDeleteTask = async (taskId) => {
+    await deleteTask(taskId)
+    setTaskModalOpen(false)
+    setEditingTask(null)
   }
 
   const openNewTask = (columnId) => {
@@ -148,12 +150,15 @@ export default function BoardPage() {
       </div>
 
       {taskModalOpen && (
-        <TaskModal
+        <TaskDetailPanel
           task={editingTask}
           columnId={newTaskColumnId}
           columns={columns}
+          boardId={boardId}
           onSave={handleSaveTask}
-          onClose={() => setTaskModalOpen(false)}
+          onUpdate={updateTask}
+          onDelete={handleDeleteTask}
+          onClose={() => { setTaskModalOpen(false); setEditingTask(null) }}
         />
       )}
 

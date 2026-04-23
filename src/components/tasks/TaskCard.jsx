@@ -5,7 +5,7 @@ const PRIORITY_BADGE = {
 }
 
 export default function TaskCard({ task, onEdit, onDelete }) {
-  const { title, priority, dueDate } = task
+  const { title, priority, dueDate, completed } = task
 
   return (
     <div
@@ -23,8 +23,16 @@ export default function TaskCard({ task, onEdit, onDelete }) {
 
       {/* Title row */}
       <div className="flex items-start gap-2.5 pr-5">
-        <div className="mt-0.5 w-4 h-4 flex-shrink-0 rounded-full border-2 border-gray-300 hover:border-indigo-400 transition-colors" />
-        <p className="text-sm text-gray-800 leading-snug">{title}</p>
+        {completed ? (
+          <div className="mt-0.5 w-4 h-4 flex-shrink-0 rounded-full bg-green-500 flex items-center justify-center">
+            <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 12 12" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2 6l3 3 5-5" />
+            </svg>
+          </div>
+        ) : (
+          <div className="mt-0.5 w-4 h-4 flex-shrink-0 rounded-full border-2 border-gray-300 hover:border-indigo-400 transition-colors" />
+        )}
+        <p className={`text-sm leading-snug ${completed ? 'line-through text-gray-400' : 'text-gray-800'}`}>{title}</p>
       </div>
 
       {/* Priority + due date */}
