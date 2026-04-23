@@ -22,7 +22,6 @@ export default function BoardPage() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [taskModalOpen, setTaskModalOpen] = useState(false)
   const [editingTask, setEditingTask] = useState(null)
-  const [newTaskColumnId, setNewTaskColumnId] = useState(null)
 
   const board = boards.find(b => b.id === boardId)
   // Always use live Firestore data for the panel when available
@@ -38,22 +37,19 @@ export default function BoardPage() {
     return <div className="flex-1 flex items-center justify-center text-gray-400">Loading board…</div>
   }
 
-  const handleSaveTask = async (taskData) => {
-    const colId = taskData.columnId || newTaskColumnId
-    const docRef = await createTask(colId, taskData)
-    // Keep panel open in edit mode so user can add subtasks/comments/attachments
-    setEditingTask({ id: docRef.id, ...taskData, columnId: colId, completed: false, attachments: [] })
-  }
-
   const handleDeleteTask = async (taskId) => {
     await deleteTask(taskId)
     setTaskModalOpen(false)
     setEditingTask(null)
   }
 
-  const openNewTask = (columnId) => {
-    setEditingTask(null)
-    setNewTaskColumnId(columnId)
+  const openNewTask = async (columnId) => {
+    const colId = columnId ?? columns[0]?.id
+    if (!colId) return
+    const docRef = await createTask(colId, {
+      title: '', priority: 'Medium', description: '', attachments: [], completed: false,
+    })
+    setEditingTask({ id: docRef.id, title: '', priority: 'Medium', columnId: colId, description: '', attachments: [], completed: false })
     setTaskModalOpen(true)
   }
 
@@ -153,13 +149,11 @@ export default function BoardPage() {
         </button>
       </div>
 
-      {taskModalOpen && (
+      {taskModalOpen && liveEditingTask && (
         <TaskDetailPanel
           task={liveEditingTask}
-          columnId={newTaskColumnId}
           columns={columns}
           boardId={boardId}
-          onSave={handleSaveTask}
           onUpdate={updateTask}
           onDelete={handleDeleteTask}
           onClose={() => { setTaskModalOpen(false); setEditingTask(null) }}

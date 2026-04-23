@@ -1,3 +1,17 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Placeholder for contenteditable rich description editor */
+[data-rich-editor]:empty:before {
+  content: attr(data-placeholder);
+  color: #d1d5db;
+  pointer-events: none;
+}
+
+[data-rich-editor] img {
+  max-width: 100%;
+  border-radius: 8px;
+  margin: 6px 0;
+  display: block;
+}
