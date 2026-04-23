@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useState, useEffect, useRef } from 'react'
+import { useParams, useSearchParams } from 'react-router-dom'
 import { useBoards } from '../../hooks/useBoards'
 import { useColumns } from '../../hooks/useColumns'
 import { useTasks } from '../../hooks/useTasks'
@@ -12,9 +12,11 @@ import BoardSettings from './BoardSettings'
 
 export default function BoardPage() {
   const { boardId } = useParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { boards, updateBoard } = useBoards()
   const { columns, createColumn, updateColumn, deleteColumn, reorderColumns } = useColumns(boardId)
   const { tasks, createTask, updateTask, deleteTask, moveTask, reorderTasks } = useTasks(boardId)
+  const autoOpenedRef = useRef(false)
 
   const [sortBy, setSortBy] = useState('')
   const [filterPriority, setFilterPriority] = useState('')
@@ -22,6 +24,20 @@ export default function BoardPage() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [taskModalOpen, setTaskModalOpen] = useState(false)
   const [editingTask, setEditingTask] = useState(null)
+
+  // Auto-open task panel from ?task= URL param (e.g. "Open in new tab")
+  useEffect(() => {
+    if (autoOpenedRef.current || tasks.length === 0) return
+    const taskId = searchParams.get('task')
+    if (!taskId) return
+    const found = tasks.find(t => t.id === taskId)
+    if (found) {
+      autoOpenedRef.current = true
+      setEditingTask(found)
+      setTaskModalOpen(true)
+      setSearchParams({}, { replace: true })
+    }
+  }, [tasks])
 
   const board = boards.find(b => b.id === boardId)
   // Always use live Firestore data for the panel when available
@@ -35,6 +51,17 @@ export default function BoardPage() {
 
   if (!board) {
     return <div className="flex-1 flex items-center justify-center text-gray-400">Loading board…</div>
+  }
+
+  const handleDuplicateTask = async (task) => {
+    await createTask(task.columnId, {
+      title: `${task.title || 'Untitled task'} (copy)`,
+      priority: task.priority ?? 'Medium',
+      description: task.description ?? '',
+      attachments: task.attachments ?? [],
+      completed: false,
+      dueDate: task.dueDate ?? null,
+    })
   }
 
   const handleDeleteTask = async (taskId) => {
@@ -128,9 +155,11 @@ export default function BoardPage() {
             key={col.id}
             column={col}
             tasks={sorted.filter(t => t.columnId === col.id)}
+            boardId={boardId}
             onAddTask={openNewTask}
             onEditTask={(task) => { setEditingTask(task); setTaskModalOpen(true) }}
             onDeleteTask={deleteTask}
+            onDuplicateTask={handleDuplicateTask}
             onReorderTasks={reorderTasks}
             onMoveTask={moveTask}
           />

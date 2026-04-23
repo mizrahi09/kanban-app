@@ -3,16 +3,22 @@ import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } 
 import { CSS } from '@dnd-kit/utilities'
 import TaskCard from '../tasks/TaskCard'
 
-function SortableTaskCard({ task, onEdit, onDelete }) {
+function SortableTaskCard({ task, boardId, onEdit, onDelete, onDuplicate }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: task.id })
   return (
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       {...attributes}
-      {...listeners}
     >
-      <TaskCard task={task} onEdit={() => onEdit(task)} onDelete={() => onDelete(task.id)} />
+      <TaskCard
+        task={task}
+        boardId={boardId}
+        onEdit={() => onEdit(task)}
+        onDelete={() => onDelete(task.id)}
+        onDuplicate={() => onDuplicate(task)}
+        dragListeners={listeners}
+      />
     </div>
   )
 }
@@ -26,7 +32,7 @@ function DroppableTaskList({ columnId, children }) {
   )
 }
 
-export default function Column({ column, tasks, onAddTask, onEditTask, onDeleteTask, onReorderTasks, onMoveTask }) {
+export default function Column({ column, tasks, boardId, onAddTask, onEditTask, onDeleteTask, onDuplicateTask, onReorderTasks, onMoveTask }) {
   const taskIds = tasks.map(t => t.id)
 
   function handleDragEnd({ active, over }) {
@@ -64,8 +70,10 @@ export default function Column({ column, tasks, onAddTask, onEditTask, onDeleteT
               <SortableTaskCard
                 key={task.id}
                 task={task}
+                boardId={boardId}
                 onEdit={onEditTask}
                 onDelete={onDeleteTask}
+                onDuplicate={onDuplicateTask}
               />
             ))}
           </DroppableTaskList>
