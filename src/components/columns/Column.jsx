@@ -8,7 +8,7 @@ function SortableTaskCard({ task, boardId, onEdit, onDelete, onDuplicate }) {
   return (
     <div
       ref={setNodeRef}
-      style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 }}
+      style={{ transform: CSS.Transform.toString(transform), transition: transition ?? 'transform 200ms ease', opacity: isDragging ? 0 : 1 }}
       {...attributes}
       {...listeners}
     >

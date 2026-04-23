@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
-import { DndContext, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
+import { DndContext, DragOverlay, PointerSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core'
 import { arrayMove } from '@dnd-kit/sortable'
 import { useBoards } from '../../hooks/useBoards'
 import { useColumns } from '../../hooks/useColumns'
@@ -8,6 +8,7 @@ import { useTasks } from '../../hooks/useTasks'
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts'
 import { sortTasks } from '../../utils/sortAndGroup'
 import Column from '../columns/Column'
+import TaskCard from '../tasks/TaskCard'
 import TaskDetailPanel from '../tasks/TaskDetailPanel'
 import BoardSettings from './BoardSettings'
 
@@ -28,6 +29,7 @@ export default function BoardPage() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [taskModalOpen, setTaskModalOpen] = useState(false)
   const [editingTask, setEditingTask] = useState(null)
+  const [draggingTask, setDraggingTask] = useState(null)
 
   // Auto-open task panel from ?task= URL param (e.g. "Open in new tab")
   useEffect(() => {
@@ -84,7 +86,12 @@ export default function BoardPage() {
     setTaskModalOpen(true)
   }
 
+  const handleDragStart = ({ active }) => {
+    setDraggingTask(tasks.find(t => t.id === active.id) ?? null)
+  }
+
   const handleDragEnd = ({ active, over }) => {
+    setDraggingTask(null)
     if (!over || active.id === over.id) return
     const activeTask = tasks.find(t => t.id === active.id)
     if (!activeTask) return
@@ -180,7 +187,13 @@ export default function BoardPage() {
       </div>
 
       {/* Columns */}
-      <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onDragCancel={() => setDraggingTask(null)}
+      >
         <div className="flex gap-4 overflow-x-auto px-6 py-5 flex-1 items-start">
           {columns.map(col => (
             <Column
@@ -207,6 +220,20 @@ export default function BoardPage() {
             <span>Add section</span>
           </button>
         </div>
+
+        <DragOverlay dropAnimation={{ duration: 180, easing: 'cubic-bezier(0.2, 0, 0, 1)' }}>
+          {draggingTask && (
+            <div style={{ transform: 'rotate(1.5deg) scale(1.03)', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.18)' }}>
+              <TaskCard
+                task={draggingTask}
+                boardId={boardId}
+                onEdit={() => {}}
+                onDelete={() => {}}
+                onDuplicate={() => {}}
+              />
+            </div>
+          )}
+        </DragOverlay>
       </DndContext>
 
       {taskModalOpen && liveEditingTask && (
