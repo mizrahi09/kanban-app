@@ -5,6 +5,7 @@ export function useKeyboardShortcuts(shortcuts) {
     function handleKeyDown(event) {
       const tag = event.target.tagName
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+      if (event.target.isContentEditable) return
       if (event.metaKey || event.ctrlKey || event.altKey) return
       const handler = shortcuts[event.key]
       if (handler) handler()
