@@ -4,6 +4,7 @@ import { collection, writeBatch, doc, serverTimestamp } from 'firebase/firestore
 import { db } from '../../firebase'
 import { useBoards } from '../../hooks/useBoards'
 import NewBoardModal from '../boards/NewBoardModal'
+import ShareModal from '../boards/ShareModal'
 
 const COLORS = [
   '#6366f1', '#3b82f6', '#06b6d4', '#22c55e',
@@ -108,6 +109,7 @@ export default function Sidebar() {
   const [renamingId, setRenamingId]     = useState(null)
   const [renameInput, setRenameInput]   = useState('')
   const [colorPicker, setColorPicker]   = useState(null)  // { board, x, y }
+  const [shareBoard, setShareBoard]     = useState(null)  // board being shared
 
   const myBoards     = boards.filter(b => b._type === 'owned')
   const sharedBoards = boards.filter(b => b._type === 'shared')
@@ -142,7 +144,7 @@ export default function Sidebar() {
   const buildMenuItems = (board, menuPos) => {
     const boardUrl = `${window.location.origin}/board/${board.id}`
     return [
-      { icon: Icon.share,   label: 'Share project',    action: () => navigator.clipboard.writeText(boardUrl) },
+      { icon: Icon.share,   label: 'Share project',    action: () => setShareBoard(board) },
       { icon: Icon.newTab,  label: 'Open in new tab',  action: () => window.open(boardUrl, '_blank') },
       { icon: Icon.link,    label: 'Copy link',        action: () => navigator.clipboard.writeText(boardUrl) },
       { icon: Icon.palette, label: 'Set color & icon', action: () => setColorPicker({ board, x: menuPos.x, y: menuPos.y }) },
@@ -220,6 +222,13 @@ export default function Sidebar() {
           y={menu.y}
           onClose={() => setMenu(null)}
           items={buildMenuItems(menu.board, { x: menu.x, y: menu.y })}
+        />
+      )}
+
+      {shareBoard && (
+        <ShareModal
+          board={boards.find(b => b.id === shareBoard.id) ?? shareBoard}
+          onClose={() => setShareBoard(null)}
         />
       )}
 

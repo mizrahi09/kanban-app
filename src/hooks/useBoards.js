@@ -20,7 +20,7 @@ export function useBoards() {
     )
     const sharedQ = query(
       collection(db, 'boards'),
-      where('isShared', '==', true)
+      where('members', 'array-contains', user.uid)
     )
 
     const sort = (list) => [...list].sort((a, b) =>
@@ -54,6 +54,7 @@ export function useBoards() {
     return addDoc(collection(db, 'boards'), {
       name,
       ownerId: user.uid,
+      members: [],
       isShared: false,
       createdAt: serverTimestamp(),
     })
